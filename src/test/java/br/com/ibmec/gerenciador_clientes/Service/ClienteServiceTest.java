@@ -1,4 +1,4 @@
-package br.com.ibmec.gerenciador_clientes.Service;
+package br.com.ibmec.gerenciador_clientes.service;
 
 import br.com.ibmec.gerenciador_clientes.exception.DuplicateResourceException;
 import br.com.ibmec.gerenciador_clientes.exception.ResourceNotFoundException;
