@@ -6,8 +6,11 @@ import br.com.ibmec.gerenciador_clientes.service.EnderecoService;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,30 +25,38 @@ public class EnderecoController {
     private ModelMapper modelMapper;
 
     @GetMapping
-    public List<EnderecoDTO> listarEnderecos(@PathVariable Long clienteId) {
-        return enderecoService.listarPorClienteId(clienteId).stream()
+    public ResponseEntity<List<EnderecoDTO>> listarEnderecos(@PathVariable Long clienteId) {
+        List<EnderecoDTO> enderecos = enderecoService.listarPorClienteId(clienteId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(enderecos);
     }
 
     @PostMapping
-    public EnderecoDTO adicionarEndereco(@PathVariable Long clienteId, @Valid @RequestBody EnderecoDTO enderecoDTO) {
+    public ResponseEntity<EnderecoDTO> adicionarEndereco(@PathVariable Long clienteId, @Valid @RequestBody EnderecoDTO enderecoDTO) {
         Endereco endereco = convertToEntity(enderecoDTO);
         Endereco enderecoSalvo = enderecoService.adicionar(clienteId, endereco);
-        return convertToDTO(enderecoSalvo);
+        EnderecoDTO enderecoSalvoDTO = convertToDTO(enderecoSalvo);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(enderecoSalvoDTO.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(enderecoSalvoDTO);
     }
 
     @PutMapping("/{enderecoId}")
-    public EnderecoDTO atualizarEndereco(@PathVariable Long clienteId, @PathVariable Long enderecoId,
-                                         @Valid @RequestBody EnderecoDTO enderecoDTO) {
+    public ResponseEntity<EnderecoDTO> atualizarEndereco(@PathVariable Long clienteId, @PathVariable Long enderecoId,
+                                                         @Valid @RequestBody EnderecoDTO enderecoDTO) {
         Endereco endereco = convertToEntity(enderecoDTO);
-        Endereco enderecoAtualizado = enderecoService.atualizar(enderecoId, endereco);
-        return convertToDTO(enderecoAtualizado);
+        Endereco enderecoAtualizado = enderecoService.atualizar(clienteId, enderecoId, endereco);
+        EnderecoDTO enderecoAtualizadoDTO = convertToDTO(enderecoAtualizado);
+        return ResponseEntity.ok(enderecoAtualizadoDTO);
     }
 
     @DeleteMapping("/{enderecoId}")
-    public void deletarEndereco(@PathVariable Long clienteId, @PathVariable Long enderecoId) {
-        enderecoService.deletar(enderecoId);
+    public ResponseEntity<Void> deletarEndereco(@PathVariable Long clienteId, @PathVariable Long enderecoId) {
+        enderecoService.deletar(clienteId, enderecoId);
+        return ResponseEntity.noContent().build();
     }
 
     private EnderecoDTO convertToDTO(Endereco endereco) {

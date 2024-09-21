@@ -39,10 +39,17 @@ public class EnderecoService {
     }
 
     @Transactional
-    public Endereco atualizar(Long enderecoId, Endereco enderecoAtualizado) {
-        Endereco enderecoExistente = enderecoRepository.findById(enderecoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado com o ID: " + enderecoId));
+    public Endereco atualizar(Long clienteId, Long enderecoId, Endereco enderecoAtualizado) {
+        // Verificar se o endereço pertence ao cliente
+        boolean pertence = enderecoRepository.existsByIdAndClienteId(enderecoId, clienteId);
+        if (!pertence) {
+            throw new ResourceNotFoundException("Endereço com ID: " + enderecoId + " não pertence ao cliente com ID: " + clienteId);
+        }
 
+        // Buscar o endereço existente
+        Endereco enderecoExistente = buscarPorId(enderecoId);
+
+        // Atualizar os campos
         enderecoExistente.setRua(enderecoAtualizado.getRua());
         enderecoExistente.setNumero(enderecoAtualizado.getNumero());
         enderecoExistente.setBairro(enderecoAtualizado.getBairro());
@@ -54,9 +61,13 @@ public class EnderecoService {
     }
 
     @Transactional
-    public void deletar(Long enderecoId) {
-        Endereco endereco = enderecoRepository.findById(enderecoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado com o ID: " + enderecoId));
+    public void deletar(Long clienteId, Long enderecoId) {
+        boolean exists = enderecoRepository.existsByIdAndClienteId(enderecoId, clienteId);
+        if (!exists) {
+            throw new ResourceNotFoundException("Endereço com ID: " + enderecoId + " não pertence ao cliente com ID: " + clienteId);
+        }
+
+        Endereco endereco = buscarPorId(enderecoId); // Método que busca o endereço ou lança exceção
         enderecoRepository.delete(endereco);
     }
 }

@@ -6,8 +6,11 @@ import br.com.ibmec.gerenciador_clientes.service.ClienteService;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,35 +25,44 @@ public class ClienteController {
     private ModelMapper modelMapper;
 
     @GetMapping
-    public List<ClienteDTO> listarTodos() {
-        return clienteService.listarTodos().stream()
+    public ResponseEntity<List<ClienteDTO>> listarTodos() {
+        List<ClienteDTO> clientes = clienteService.listarTodos().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(clientes);
     }
 
     @GetMapping("/{id}")
-    public ClienteDTO buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ClienteDTO> buscarPorId(@PathVariable Long id) {
         Cliente cliente = clienteService.buscarPorId(id);
-        return convertToDTO(cliente);
+        ClienteDTO clienteDTO = convertToDTO(cliente);
+        return ResponseEntity.ok(clienteDTO);
     }
 
     @PostMapping
-    public ClienteDTO adicionar(@Valid @RequestBody ClienteDTO clienteDTO) {
+    public ResponseEntity<ClienteDTO> adicionar(@Valid @RequestBody ClienteDTO clienteDTO) {
         Cliente cliente = convertToEntity(clienteDTO);
         Cliente clienteSalvo = clienteService.adicionar(cliente);
-        return convertToDTO(clienteSalvo);
+        ClienteDTO clienteSalvoDTO = convertToDTO(clienteSalvo);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(clienteSalvoDTO.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(clienteSalvoDTO);
     }
 
     @PutMapping("/{id}")
-    public ClienteDTO atualizar(@PathVariable Long id, @Valid @RequestBody ClienteDTO clienteDTO) {
+    public ResponseEntity<ClienteDTO> atualizar(@PathVariable Long id, @Valid @RequestBody ClienteDTO clienteDTO) {
         Cliente cliente = convertToEntity(clienteDTO);
         Cliente clienteAtualizado = clienteService.atualizar(id, cliente);
-        return convertToDTO(clienteAtualizado);
+        ClienteDTO clienteAtualizadoDTO = convertToDTO(clienteAtualizado);
+        return ResponseEntity.ok(clienteAtualizadoDTO);
     }
 
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
         clienteService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 
     private ClienteDTO convertToDTO(Cliente cliente) {
