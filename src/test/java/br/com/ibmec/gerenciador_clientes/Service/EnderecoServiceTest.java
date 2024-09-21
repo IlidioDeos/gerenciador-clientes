@@ -6,11 +6,17 @@ import br.com.ibmec.gerenciador_clientes.model.Endereco;
 import br.com.ibmec.gerenciador_clientes.repository.EnderecoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class EnderecoServiceTest {
 
     @InjectMocks
@@ -27,12 +33,9 @@ class EnderecoServiceTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
         cliente = new Cliente();
         cliente.setId(1L);
         cliente.setNome("João Silva");
-        // Outros campos...
 
         endereco = new Endereco();
         endereco.setId(1L);
@@ -57,4 +60,36 @@ class EnderecoServiceTest {
         verify(enderecoRepository, times(1)).save(endereco);
     }
 
+    @Test
+    void adicionarEnderecoClienteNaoEncontrado() {
+        when(clienteService.buscarPorId(cliente.getId())).thenThrow(new ResourceNotFoundException("Cliente não encontrado com o ID: " + cliente.getId()));
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            enderecoService.adicionar(cliente.getId(), endereco);
+        });
+
+        assertEquals("Cliente não encontrado com o ID: " + cliente.getId(), exception.getMessage());
+        verify(enderecoRepository, never()).save(any(Endereco.class));
+    }
+
+    @Test
+    void buscarEnderecoPorIdExistente() {
+        when(enderecoRepository.findById(endereco.getId())).thenReturn(Optional.of(endereco));
+
+        Endereco enderecoEncontrado = enderecoService.buscarPorId(endereco.getId());
+
+        assertNotNull(enderecoEncontrado);
+        assertEquals(endereco.getId(), enderecoEncontrado.getId());
+    }
+
+    @Test
+    void buscarEnderecoPorIdInexistente() {
+        when(enderecoRepository.findById(endereco.getId())).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            enderecoService.buscarPorId(endereco.getId());
+        });
+
+        assertEquals("Endereço não encontrado com o ID: " + endereco.getId(), exception.getMessage());
+    }
 }

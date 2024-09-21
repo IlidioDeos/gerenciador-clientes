@@ -6,8 +6,10 @@ import br.com.ibmec.gerenciador_clientes.model.Cliente;
 import br.com.ibmec.gerenciador_clientes.repository.ClienteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -16,7 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class ClienteServiceTest {
 
     @InjectMocks
@@ -29,8 +31,6 @@ class ClienteServiceTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
         cliente = new Cliente();
         cliente.setId(1L);
         cliente.setNome("João Silva");
@@ -109,6 +109,4 @@ class ClienteServiceTest {
         assertFalse(clientes.isEmpty());
         assertEquals(1, clientes.size());
     }
-
-
 }

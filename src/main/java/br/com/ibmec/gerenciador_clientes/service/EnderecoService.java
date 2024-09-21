@@ -20,6 +20,12 @@ public class EnderecoService {
     private ClienteService clienteService;
 
     @Transactional(readOnly = true)
+    public Endereco buscarPorId(Long enderecoId) {
+        return enderecoRepository.findById(enderecoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado com o ID: " + enderecoId));
+    }
+
+    @Transactional(readOnly = true)
     public List<Endereco> listarPorClienteId(Long clienteId) {
         Cliente cliente = clienteService.buscarPorId(clienteId);
         return cliente.getEnderecos();

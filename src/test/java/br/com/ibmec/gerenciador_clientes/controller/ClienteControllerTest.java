@@ -1,15 +1,16 @@
 package br.com.ibmec.gerenciador_clientes.controller;
 
-import br.com.ibmec.gerenciador_clientes.dto.ClienteDTO;
 import br.com.ibmec.gerenciador_clientes.model.Cliente;
+import br.com.ibmec.gerenciador_clientes.config.ModelMapperConfig;
 import br.com.ibmec.gerenciador_clientes.service.ClienteService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -22,6 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ClienteController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(ModelMapperConfig.class)
 class ClienteControllerTest {
 
     @Autowired
@@ -29,9 +32,6 @@ class ClienteControllerTest {
 
     @MockBean
     private ClienteService clienteService;
-
-    @Autowired
-    private ModelMapper modelMapper;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -46,14 +46,15 @@ class ClienteControllerTest {
         cliente.setDataNascimento(LocalDate.of(1990, 1, 1));
         cliente.setTelefone("(11) 91234-5678");
 
-        ClienteDTO clienteDTO = modelMapper.map(cliente, ClienteDTO.class);
-
+        // Mockando a resposta do serviço
         when(clienteService.listarTodos()).thenReturn(Arrays.asList(cliente));
 
+        // Realizando a requisição e verificando o resultado
         mockMvc.perform(get("/clientes"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].nome", is("João Silva")));
+                .andExpect(jsonPath("$[0].nome", is("João Silva")))
+                .andExpect(jsonPath("$[0].email", is("joao.silva@example.com")));
     }
 
-    // TODO: Outros testes
+    // Outros testes...
 }
